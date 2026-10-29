@@ -1,0 +1,4 @@
+node_modules
+dist
+# Alohida mp3 fayllar (generator keshi); saytga mavzu toʻplamlari (public/audio/uz|ar/*.json) chiqadi
+public/audio/*-*/

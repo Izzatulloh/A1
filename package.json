@@ -1,0 +1,22 @@
+{
+  "name": "kalima-lugat",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Arabcha–oʻzbekcha lugʻat va tinglab yodlash mashqi (Al-Manhaj al-ʻĀlamiy A1)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/to-artifact.js",
+    "preview": "vite preview",
+    "audio": "node tools/generate-audio.js"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.4",
+    "vite": "5.4.11",
+    "vite-plugin-singlefile": "2.0.3"
+  }
+}
