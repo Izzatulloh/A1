@@ -4,7 +4,7 @@ import {TOPIC, TOPICS, WORDS, selectedWords} from "../lib/words.js";
 import {PHASE, card, usePractice} from "../lib/usePractice.js";
 import {Close, Eye, Next, Pause, Play, Prev, Repeat} from "./icons.jsx";
 
-const DELAYS = [0, 3, 5, 7, 10, 15], GAPS = [1, 2, 3, 5];
+const DELAYS = [0, 3, 5, 7, 10, 15], GAPS = [0, 1, 2, 3, 5];
 const C = 2 * Math.PI * 52;
 
 function Seg({name, label, value, options, onChange}){
@@ -89,7 +89,7 @@ function Setup({S, update, onStart}){
         <div>
           <div className="f-label">Javobdan keyin pauza</div>
           <div className="chips">
-            {GAPS.map(g => <button key={g} className="chip" type="button" aria-pressed={S.gap === g} onClick={() => update({gap: g})}>{g} soniya</button>)}
+            {GAPS.map(g => <button key={g} className="chip" type="button" aria-pressed={S.gap === g} onClick={() => update({gap: g})}>{g ? `${g} soniya` : "0 · darhol"}</button>)}
           </div>
         </div>
         <div>

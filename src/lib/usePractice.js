@@ -72,10 +72,13 @@ export function usePractice(S){
         patch({i: p.i, phase: PHASE.ANSWER});
         if (S.sayAns) { await speak(c.aText, c.aLang, S, c.w.t, alive); if (!alive()) return; }
       }
-      p.phase = PHASE.GAP;
-      patch({phase: PHASE.GAP});
-      await timer(S.gap * 1000, alive);
-      if (!alive()) return;
+      // Pauza 0 boʻlsa javobdan keyin darhol keyingi soʻzga oʻtiladi
+      if (S.gap > 0) {
+        p.phase = PHASE.GAP;
+        patch({phase: PHASE.GAP});
+        await timer(S.gap * 1000, alive);
+        if (!alive()) return;
+      }
       p.i++; phase = PHASE.PROMPT; remain = null;
     }
     finish();
