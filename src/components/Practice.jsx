@@ -4,7 +4,7 @@ import {TOPIC, TOPICS, WORDS, selectedWords} from "../lib/words.js";
 import {PHASE, card, usePractice} from "../lib/usePractice.js";
 import {Close, Eye, Next, Pause, Play, Prev, Repeat} from "./icons.jsx";
 
-const DELAYS = [0, 3, 5, 7, 10, 15], GAPS = [0, 1, 2, 3, 5];
+const DELAYS = [0, 3, 5, 7, 10, 15], GAPS = [0, 1, 2, 3, 5], REPS = [1, 2, 5, 10];
 const C = 2 * Math.PI * 52;
 
 function Seg({name, label, value, options, onChange}){
@@ -32,7 +32,7 @@ function Switch({id, title, hint, checked, onChange}){
 function Setup({S, update, onStart}){
   const n = selectedWords(S.topics).length;
   const per = 1.6 + S.delay + (S.sayAns ? 1.6 : 0) + S.gap;
-  const min = Math.max(1, Math.round(n * per / 60));
+  const min = Math.max(1, Math.round(n * S.reps * per / 60));
   const uzFirst = S.dir === "uz-ar";
   const a = uzFirst ? "arabchasi" : "oʻzbekchasi";
   const tail = S.sayAns ? `${a} aytiladi` : S.showAns ? `${a} ekranda chiqadi` : "keyingi soʻzga oʻtiladi";
@@ -48,7 +48,7 @@ function Setup({S, update, onStart}){
     <section>
       <div className="hero">
         <svg className="hero-star" viewBox="0 0 40 40" aria-hidden="true"><rect x="9" y="9" width="22" height="22" rx="2"/><rect x="9" y="9" width="22" height="22" rx="2" transform="rotate(45 20 20)"/></svg>
-        <div className="hero-num"><strong>{n}</strong><span>ta soʻz</span><span>· taxminan {min} daqiqa</span></div>
+        <div className="hero-num"><strong>{n}</strong><span>ta soʻz{S.reps > 1 ? ` × ${S.reps}` : ""}</span><span>· taxminan {min} daqiqa</span></div>
         <p>{uzFirst ? "Oʻzbekchasi" : "Arabchasi"} aytiladi, {S.delay ? `${S.delay} soniya ichida tarjimasini topasiz, keyin` : "kutmasdan darhol"} {tail}.</p>
         <button className="btn-start" type="button" onClick={onStart}><Play size={20}/>Mashqni boshlash</button>
       </div>
@@ -85,6 +85,17 @@ function Setup({S, update, onStart}){
               onBlur={e => { const v = Math.round(Number(e.target.value)); if (v >= 0 && v <= 120) update({delay: v}); else e.target.value = S.delay; }}
               onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}/>
             soniya</label>
+        </div>
+        <div>
+          <div className="f-label">Har bir soʻzni takrorlash</div>
+          <div className="chips">
+            {REPS.map(r => <button key={r} className="chip" type="button" aria-pressed={S.reps === r} onClick={() => update({reps: r})}>{r === 1 ? "1 marta" : `${r} marta`}</button>)}
+          </div>
+          <label className="num">Boshqa:
+            <input id="repsIn" type="number" min="1" max="50" step="1" inputMode="numeric" key={S.reps} defaultValue={S.reps}
+              onBlur={e => { const v = Math.round(Number(e.target.value)); if (v >= 1 && v <= 50) update({reps: v}); else e.target.value = S.reps; }}
+              onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur(); }}/>
+            marta</label>
         </div>
         <div>
           <div className="f-label">Javobdan keyin pauza</div>
@@ -214,6 +225,7 @@ export default function Practice({S, update, active, onPlayingChange}){
           <button className="icon-btn" type="button" aria-label="Mashqni toʻxtatish" onClick={pr.stop}><Close/></button>
           <div className="p-meta">
             <span id="pCounter">{pr.ui.status === "done" ? pr.ui.queue.length : pr.ui.i + 1} / {pr.ui.queue.length}</span>
+            {S.reps > 1 && pr.ui.status !== "done" && <span id="pRep">{pr.ui.rep + 1}/{S.reps}-takror</span>}
             <span id="pTopic">{w ? pretty(TOPIC[w.t].uz) : ""}</span>
           </div>
           <span className="p-mode">{S.dir === "uz-ar" ? "UZ → AR" : "AR → UZ"}</span>

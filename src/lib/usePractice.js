@@ -1,4 +1,5 @@
 // Mashq jarayoni: savol soʻz aytiladi → kutish (sanoq) → javob koʻrsatiladi/aytiladi → pauza → keyingi soʻz.
+// Takror soni 1 dan katta boʻlsa, shu aylanish har bir soʻz uchun shuncha marta qaytariladi.
 // Har bir harakat (pauza, keyingi, toʻxtatish) token'ni oshiradi; eski tsikl token oʻzgarganini koʻrib toʻxtaydi.
 import {useCallback, useEffect, useRef, useState} from "react";
 import {buildQueue} from "./words.js";
@@ -30,12 +31,12 @@ let wake = null;
 async function wakeOn(){ try { if (navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch (e) { wake = null; } }
 function wakeOff(){ try { if (wake) wake.release(); } catch (e) {} wake = null; }
 
-const IDLE = {status: "idle", queue: [], i: 0, phase: PHASE.PROMPT, left: 0, total: 1, speaking: false, paused: false};
+const IDLE = {status: "idle", queue: [], i: 0, rep: 0, phase: PHASE.PROMPT, left: 0, total: 1, speaking: false, paused: false};
 
 export function usePractice(S){
   const Sref = useRef(S);
   Sref.current = S;
-  const P = useRef({queue: [], i: 0, phase: 0, remain: null, paused: false, running: false, token: 0});
+  const P = useRef({queue: [], i: 0, rep: 0, phase: 0, remain: null, paused: false, running: false, token: 0});
   const [ui, setUi] = useState(IDLE);
   const patch = p => setUi(u => ({...u, ...p}));
 
@@ -55,7 +56,7 @@ export function usePractice(S){
       const S = Sref.current, c = card(p.queue[p.i], S.dir), total = S.delay * 1000;
       if (phase <= PHASE.PROMPT) {
         p.phase = PHASE.PROMPT;
-        patch({i: p.i, phase: PHASE.PROMPT, left: total, total, speaking: true});
+        patch({i: p.i, rep: p.rep, phase: PHASE.PROMPT, left: total, total, speaking: true});
         await speak(c.pText, c.pLang, S, c.w.t, alive);
         if (!alive()) return;
         patch({speaking: false});
@@ -79,7 +80,9 @@ export function usePractice(S){
         await timer(S.gap * 1000, alive);
         if (!alive()) return;
       }
-      p.i++; phase = PHASE.PROMPT; remain = null;
+      phase = PHASE.PROMPT; remain = null;
+      if (++p.rep < Sref.current.reps) continue;
+      p.rep = 0; p.i++;
     }
     finish();
   }, [finish]);
@@ -90,7 +93,7 @@ export function usePractice(S){
     ui,
     start(){
       const p = P.current;
-      p.queue = buildQueue(Sref.current); p.i = 0; p.remain = null;
+      p.queue = buildQueue(Sref.current); p.i = 0; p.rep = 0; p.remain = null;
       if (!p.queue.length) return;
       preloadTopics([...new Set(p.queue.map(w => w.t))]);
       setUi({...IDLE, status: "running", queue: p.queue});
@@ -109,7 +112,7 @@ export function usePractice(S){
     },
     go(i){
       const p = P.current;
-      halt(); p.i = Math.max(0, Math.min(p.queue.length - 1, i)); p.remain = null;
+      halt(); p.i = Math.max(0, Math.min(p.queue.length - 1, i)); p.rep = 0; p.remain = null;
       runFrom(PHASE.PROMPT);
     },
     next(){ const p = P.current; if (p.i >= p.queue.length - 1) { halt(); finish(); } else api.go(p.i + 1); },
